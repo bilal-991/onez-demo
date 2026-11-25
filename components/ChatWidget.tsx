@@ -11,8 +11,15 @@ type Msg = { role: "user" | "assistant"; content: string; actions?: Action[] };
 const HELLO: Msg = { role: "assistant", content: "Salaam! I'm the ONEZ assistant. Tell me what kind of shoes you like — colour, style, occasion, your size — and I'll find your pair and put it in your bag." };
 const STARTERS = ["Black shoes for daily wear", "Something bold and eye-catching", "A gift for my brother", "Show me everything"];
 
+/** **bold**, plus clickable links and email addresses in assistant replies */
 function Bold({ text }: { text: string }) {
-  return <>{text.split(/(\*\*[^*]+\*\*)/g).map((t, i) => (t.startsWith("**") ? <b key={i}>{t.slice(2, -2)}</b> : <span key={i}>{t}</span>))}</>;
+  const link = (t: string, k: string) =>
+    t.split(/(https?:\/\/[^\s)]+|[\w.+-]+@[\w-]+\.[\w.]+)/g).map((x, i) => {
+      if (/^https?:\/\//.test(x)) return <a key={k + i} href={x} target="_blank" rel="noreferrer">{x.replace(/^https?:\/\//, "")}</a>;
+      if (/^[\w.+-]+@[\w-]+\.[\w.]+$/.test(x)) return <a key={k + i} href={`mailto:${x}`}>{x}</a>;
+      return <span key={k + i}>{x}</span>;
+    });
+  return <>{text.split(/(\*\*[^*]+\*\*)/g).map((t, i) => (t.startsWith("**") ? <b key={i}>{t.slice(2, -2)}</b> : link(t, `s${i}`)))}</>;
 }
 
 function ProductCard({ id }: { id: string }) {
