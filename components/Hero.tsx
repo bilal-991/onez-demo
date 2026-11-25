@@ -10,7 +10,7 @@ export default function Hero() {
   const t2 = useRef<HTMLDivElement>(null);
   const t3 = useRef<HTMLDivElement>(null);
   const hint = useRef<HTMLDivElement>(null);
-  const { ready, draw } = useFrames("hero", canvas, { zoom: 0.74, dx: 0.1 });
+  const { ready, draw } = useFrames("hero", canvas, { zoom: 0.74, dx: 0.1, mzoom: 1.5, my: 0.43 });
   const last = useRef(0);
 
   const update = (p: number) => {

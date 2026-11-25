@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Anton, Space_Mono, Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
@@ -18,6 +18,8 @@ export const metadata: Metadata = {
   title: "ONEZ Shoes — Made in Pakistan. Unbox the 1997.",
   description: "ONEZ designs, manufactures and sells sneakers in Pakistan. Open the box, find your pair, order on WhatsApp.",
 };
+
+export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover", themeColor: "#15100c" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

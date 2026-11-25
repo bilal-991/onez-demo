@@ -40,7 +40,7 @@ export function Anatomy() {
   const canvas = useRef<HTMLCanvasElement>(null);
   const labels = useRef<HTMLUListElement>(null);
   const copy = useRef<HTMLDivElement>(null);
-  const { draw } = useFrames("anatomy", canvas);
+  const { draw } = useFrames("anatomy", canvas, { mzoom: 2, my: 0.48 });
   useStickyProgress(sec, (p) => {
     draw(p);
     labels.current?.querySelectorAll<HTMLElement>("li").forEach((li, i) => {
@@ -74,7 +74,7 @@ export function Turntable() {
   const sec = useRef<HTMLElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const deg = useRef<HTMLSpanElement>(null);
-  const { draw } = useFrames("turn", canvas);
+  const { draw } = useFrames("turn", canvas, { mzoom: 2.1, my: 0.56 });
   useStickyProgress(sec, (p) => {
     draw(p);
     if (deg.current) deg.current.textContent = String(Math.round(p * 360)).padStart(3, "0");
