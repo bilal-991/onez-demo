@@ -4,7 +4,7 @@ export const frameStore: Record<string, HTMLImageElement[]> = {};
 export const SCENES = ["hero", "anatomy", "turn"] as const;
 
 /**
- * Loads a scene in two passes: a coarse pass (every 8th frame) that resolves `coarse` quickly,
+ * Loads a scene in two passes: a coarse pass (every 6th frame) that resolves `coarse` quickly,
  * then the remaining frames in the background (`all`). Drawing falls back to the nearest loaded frame.
  */
 export function loadScene(name: string, onCoarse: (done: number, total: number) => void = () => {}) {
@@ -15,10 +15,10 @@ export function loadScene(name: string, onCoarse: (done: number, total: number) 
     const n: number = m.count;
     const list: HTMLImageElement[] = (frameStore[name] ||= new Array(n));
     const order: number[] = [];
-    for (let i = 0; i < n; i += 8) order.push(i);
+    for (let i = 0; i < n; i += 6) order.push(i);
     if (order[order.length - 1] !== n - 1) order.push(n - 1);
     const coarseCount = order.length;
-    for (let i = 0; i < n; i++) if (i % 8 && i !== n - 1) order.push(i);
+    for (let i = 0; i < n; i++) if (i % 6 && i !== n - 1) order.push(i);
 
     let k = 0, done = 0;
     const worker = async () => {
@@ -38,7 +38,7 @@ export function loadScene(name: string, onCoarse: (done: number, total: number) 
         if (done === coarseCount) resolveCoarse();
       }
     };
-    await Promise.all(Array.from({ length: 6 }, worker));
+    await Promise.all(Array.from({ length: 8 }, worker));
     resolveCoarse();
   })().catch(() => resolveCoarse());
   return { coarse, all };

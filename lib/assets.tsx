@@ -28,17 +28,17 @@ export function AssetProvider({ children }: { children: React.ReactNode }) {
       const p = Object.keys(W).reduce((a, k) => a + (frac[k] || 0) * W[k], 0) / totalW;
       setState((s) => ({ ...s, progress: p }));
     };
-    let heroAll: Promise<void> = Promise.resolve();
+    // Start the other scenes' coarse passes right away (in parallel), so they're ready long before the visitor scrolls to them.
+    const others = SCENES.filter((x) => x !== "hero").map((n) => loadScene(n));
     const jobs = [
-      (async () => { const h = loadScene("hero", (d, t) => { frac.hero = d / t; report(); }); await h.coarse; frac.hero = 1; heroAll = h.all; })(),
+      (async () => { const h = loadScene("hero", (d, t) => { frac.hero = d / t; report(); }); await h.coarse; frac.hero = 1; })(),
       ...IMAGES.map(async (u) => { try { const im = new Image(); im.src = u; await im.decode(); } catch {} frac[u] = 1; report(); }),
     ];
     const timeout = new Promise((r) => setTimeout(r, 45000)); // never trap the visitor
-    Promise.race([Promise.all(jobs), timeout]).then(async () => {
+    Promise.race([Promise.all(jobs), timeout]).then(() => {
       report(true); setState({ progress: 1, done: true });
-      // everything else keeps loading quietly in the background
-      await heroAll;
-      for (const n of SCENES.filter((x) => x !== "hero")) { await loadScene(n).all; }
+      // remaining frames of every scene keep filling in quietly (already running in parallel)
+      void others;
     });
   }, []);
 
