@@ -18,7 +18,8 @@ export function loadScene(name: string, onCoarse: (done: number, total: number) 
     for (let i = 0; i < n; i += 6) order.push(i);
     if (order[order.length - 1] !== n - 1) order.push(n - 1);
     const coarseCount = order.length;
-    for (let i = 0; i < n; i++) if (i % 6 && i !== n - 1) order.push(i);
+    for (let i = 0; i < n; i += 3) if (i % 6 && i !== n - 1) order.push(i);
+    for (let i = 0; i < n; i++) if (i % 3 && i !== n - 1) order.push(i);
 
     let k = 0, done = 0;
     const worker = async () => {
@@ -30,6 +31,7 @@ export function loadScene(name: string, onCoarse: (done: number, total: number) 
         if (done < coarseCount) {
           // first pass: wait for the DOWNLOAD only (decoding 1080p frames is CPU-heavy and would stall the loader)
           await new Promise<void>((r) => { im.onload = () => r(); im.onerror = () => r(); });
+          try { await im.decode(); } catch {}
         } else {
           try { await im.decode(); } catch {}
         }

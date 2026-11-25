@@ -15,16 +15,18 @@ export function useFrames(name: string, canvas: RefObject<HTMLCanvasElement | nu
     if (!c || !list?.length) return;
     const ok = (im?: HTMLImageElement) => !!im && im.complete && im.naturalWidth > 0;
     const f = Math.min(list.length - 1, Math.max(0, p * (list.length - 1)));
-    let i0 = Math.floor(f), i1 = Math.min(list.length - 1, i0 + 1), t = f - i0;
-    if (!ok(list[i0])) { // nearest loaded frame
-      let found = -1;
-      for (let d = 1; d < list.length && found < 0; d++) {
-        if (ok(list[i0 - d])) found = i0 - d; else if (ok(list[i0 + d])) found = i0 + d;
+    const i0 = Math.floor(f), i1 = Math.min(list.length - 1, i0 + 1);
+    let a: HTMLImageElement, b: HTMLImageElement, t = 0;
+    if (ok(list[i0]) && ok(list[i1])) { a = list[i0]; b = list[i1]; t = f - i0; } // both neighbours ready: smooth cross-fade
+    else { // gaps still loading: snap (no blending, so no ghosting) to the nearest loaded frame, monotonic so it never jitters back and forth
+      let best = -1;
+      for (let d = 0; d < list.length && best < 0; d++) {
+        const lo = Math.round(f) - d, hi = Math.round(f) + d;
+        if (lo >= 0 && ok(list[lo])) best = lo; else if (hi < list.length && ok(list[hi])) best = hi;
       }
-      if (found < 0) return;
-      i0 = found; t = 0;
+      if (best < 0) return;
+      a = b = list[best];
     }
-    const a = list[i0], b = ok(list[i1]) ? list[i1] : a;
     const dpr = Math.min(1.5, window.devicePixelRatio || 1);
     const cw = Math.round(c.clientWidth * dpr), ch = Math.round(c.clientHeight * dpr);
     if (c.width !== cw || c.height !== ch) { c.width = cw; c.height = ch; }

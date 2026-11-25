@@ -16,8 +16,8 @@ export function AssetProvider({ children }: { children: React.ReactNode }) {
     if (started.current) return;
     started.current = true;
     const frac: Record<string, number> = {};
-    // The loader waits for the hero + product photos only; other scenes keep loading quietly after.
-    const W: Record<string, number> = { hero: 10 };
+    // The loader waits for the coarse pass of every scene + product photos; the rest keeps loading quietly after.
+    const W: Record<string, number> = { hero: 10, anatomy: 5, turn: 5 };
     IMAGES.forEach((u) => (W[u] = 0.7));
     const totalW = Object.values(W).reduce((a, b) => a + b, 0);
     let last = 0;
@@ -29,8 +29,9 @@ export function AssetProvider({ children }: { children: React.ReactNode }) {
       setState((s) => ({ ...s, progress: p }));
     };
     // Start the other scenes' coarse passes right away (in parallel), so they're ready long before the visitor scrolls to them.
-    const others = SCENES.filter((x) => x !== "hero").map((n) => loadScene(n));
+    const others = SCENES.filter((x) => x !== "hero").map((n) => loadScene(n, (d, t) => { frac[n] = d / t; report(); }));
     const jobs = [
+      ...others.map(async (o, i) => { await o.coarse; frac[SCENES.filter((x) => x !== "hero")[i]] = 1; }),
       (async () => { const h = loadScene("hero", (d, t) => { frac.hero = d / t; report(); }); await h.coarse; frac.hero = 1; })(),
       ...IMAGES.map(async (u) => { try { const im = new Image(); im.src = u; await im.decode(); } catch {} frac[u] = 1; report(); }),
     ];
