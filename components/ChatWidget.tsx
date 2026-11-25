@@ -52,7 +52,29 @@ export default function ChatWidget() {
     try { const s = JSON.parse(sessionStorage.getItem("onez-chat") || "null"); if (s?.length) { setMsgs(s); applied.current = s.filter((m: Msg) => m.role === "assistant").length; } } catch {}
   }, []);
   useEffect(() => { sessionStorage.setItem("onez-chat", JSON.stringify(msgs.slice(-30))); end.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [msgs, busy, open]);
-  useEffect(() => { if (open) setTimeout(() => box.current?.focus(), 250); }, [open]);
+  useEffect(() => { if (open && window.innerWidth > 760) setTimeout(() => box.current?.focus(), 250); }, [open]);
+  // Phones: the on-screen keyboard shrinks the *visual* viewport, not the layout one. Pin the sheet to the visual viewport
+  // so the header, the messages and the input box stay visible above the keyboard instead of hiding behind it.
+  const sheet = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!open || window.innerWidth > 760) return;
+    const vv = window.visualViewport, el = sheet.current;
+    window.__lenis?.stop();
+    document.documentElement.style.overflow = "hidden";
+    const fit = () => {
+      if (!vv || !el) return;
+      el.style.setProperty("--vvh", `${vv.height}px`);
+      el.style.setProperty("--vvt", `${vv.offsetTop}px`);
+      end.current?.scrollIntoView({ block: "end" });
+    };
+    fit();
+    vv?.addEventListener("resize", fit); vv?.addEventListener("scroll", fit);
+    return () => {
+      vv?.removeEventListener("resize", fit); vv?.removeEventListener("scroll", fit);
+      el?.style.removeProperty("--vvh"); el?.style.removeProperty("--vvt");
+      window.__lenis?.start(); document.documentElement.style.overflow = "";
+    };
+  }, [open]);
 
   async function send(text: string) {
     const t = text.trim();
@@ -81,7 +103,7 @@ export default function ChatWidget() {
         <span>Ask ONEZ</span>
       </button>
 
-      <section className={`cb ${open ? "on" : ""}`} aria-hidden={!open} aria-label="ONEZ assistant" data-lenis-prevent>
+      <section ref={sheet} className={`cb ${open ? "on" : ""}`} aria-hidden={!open} aria-label="ONEZ assistant" data-lenis-prevent>
         <header className="cb-head">
           <div><b>ONEZ Assistant</b><small><i /> Finds your pair · adds it to your bag</small></div>
           <button onClick={() => setOpen(false)} aria-label="Close chat">✕</button>

@@ -526,3 +526,37 @@ button,a{-webkit-tap-highlight-color:transparent}
  .btn:hover,.chips button:hover,.pbox:hover,.cb-fab:hover{transform:none}
  .pcard:hover{box-shadow:0 24px 50px rgba(0,0,0,.45)}
 }
+
+/* ===== detail page + chat: phone fixes (kept last so they beat the earlier desktop overrides) ===== */
+@media(max-width:900px){
+ .pdp-grid{grid-template-columns:minmax(0,1fr);gap:1.6rem}
+ .pdp-media{position:static}
+ .pdp-frame{width:100%;max-height:none;aspect-ratio:1/1}
+ .pdp-info h1{font-size:clamp(2.8rem,13vw,4.6rem)}
+}
+@media(min-width:561px) and (max-width:900px){.pdp-frame{aspect-ratio:4/3}}
+@media(max-width:760px){
+ .pdp{padding:5rem 1rem 3rem}
+ .crumbs{margin-bottom:1.1rem;font-size:.64rem;line-height:1.7}
+ .pdp-frame{border-width:3px}
+ .pdp-tag{top:.6rem;left:.6rem;font-size:.6rem;padding:.4rem .6rem}
+ .pdp-meta{font-size:.7rem;gap:.35rem .5rem}
+ .pdp-story{margin:1.2rem 0;max-width:none}
+ .pdp-block{margin:1.4rem 0}
+ .pdp-label{flex-wrap:wrap;gap:.2rem .8rem}
+ .sizes.lg{display:grid;grid-template-columns:repeat(auto-fill,minmax(3.4rem,1fr));gap:.55rem}
+ .sizes.lg button{width:100%;height:3.4rem}
+ .pdp-actions{display:grid;grid-template-columns:1fr;gap:.7rem}
+ .pdp-actions .btn{width:100%;text-align:center;padding:1.15rem 1rem}
+ .pdp-actions .qty{width:100%;justify-content:space-between}
+ .pdp-feat{margin-top:1.6rem}
+ .pdp-pager{flex-direction:column;margin:2rem 0}.pdp-pager a{padding:1rem 0;border-bottom:1px solid rgba(0,0,0,.15)}.pdp-pager a:last-child{border:0}
+ .pdp-more h2{margin-bottom:1.2rem}
+ /* chat sheet follows the visual viewport (set from JS) so the keyboard never covers the input */
+ .cb{top:var(--vvt,0);bottom:auto;height:var(--vvh,100dvh);max-height:100dvh}
+ .cb-body{overscroll-behavior:contain;padding:.9rem .9rem 1.1rem}
+ .cb-msg{max-width:96%}
+ .cb-input{flex:none}
+ .cb-input input{padding:1rem .9rem}
+}
+@media(hover:none){.pdp-hint{display:none}.pdp-frame{cursor:default}}
