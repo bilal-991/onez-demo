@@ -28,18 +28,21 @@ export function AssetProvider({ children }: { children: React.ReactNode }) {
       const p = Object.keys(W).reduce((a, k) => a + (frac[k] || 0) * W[k], 0) / totalW;
       setState((s) => ({ ...s, progress: p }));
     };
-    // Start the other scenes' coarse passes right away (in parallel), so they're ready long before the visitor scrolls to them.
-    const others = SCENES.filter((x) => x !== "hero").map((n) => loadScene(n, (d, t) => { frac[n] = d / t; report(); }));
+    // Hero is the first thing seen, so it gets a finer first pass (every 3rd frame) and finishes completely before the other
+    // scenes refine. All scenes still load their rough pass up front, so nothing is blank when you scroll quickly.
+    const hero = loadScene("hero", (d, t) => { frac.hero = d / t; report(); }, { stride: 3 });
+    const heroDone = hero.all.catch(() => {});
+    const others = SCENES.filter((x) => x !== "hero").map((n) => ({ n, s: loadScene(n, (d, t) => { frac[n] = d / t; report(); }, { gate: heroDone }) }));
     const jobs = [
-      ...others.map(async (o, i) => { await o.coarse; frac[SCENES.filter((x) => x !== "hero")[i]] = 1; }),
-      (async () => { const h = loadScene("hero", (d, t) => { frac.hero = d / t; report(); }); await h.coarse; frac.hero = 1; })(),
+      (async () => { await hero.coarse; frac.hero = 1; })(),
+      ...others.map(async (o) => { await o.s.coarse; frac[o.n] = 1; }),
       ...IMAGES.map(async (u) => { try { const im = new Image(); im.src = u; await im.decode(); } catch {} frac[u] = 1; report(); }),
     ];
     const timeout = new Promise((r) => setTimeout(r, 45000)); // never trap the visitor
     Promise.race([Promise.all(jobs), timeout]).then(() => {
       report(true); setState({ progress: 1, done: true });
       // remaining frames of every scene keep filling in quietly (already running in parallel)
-      void others;
+      void others; void heroDone;
     });
   }, []);
 

@@ -7,7 +7,8 @@ export const SCENES = ["hero", "anatomy", "turn"] as const;
  * Loads a scene in two passes: a coarse pass (every 6th frame) that resolves `coarse` quickly,
  * then the remaining frames in the background (`all`). Drawing falls back to the nearest loaded frame.
  */
-export function loadScene(name: string, onCoarse: (done: number, total: number) => void = () => {}) {
+export function loadScene(name: string, onCoarse: (done: number, total: number) => void = () => {}, opts: { stride?: number; gate?: Promise<unknown> } = {}) {
+  const STRIDE = opts.stride ?? 6;
   let resolveCoarse!: () => void;
   const coarse = new Promise<void>((r) => (resolveCoarse = r));
   const all = (async () => {
@@ -15,15 +16,16 @@ export function loadScene(name: string, onCoarse: (done: number, total: number) 
     const n: number = m.count;
     const list: HTMLImageElement[] = (frameStore[name] ||= new Array(n));
     const order: number[] = [];
-    for (let i = 0; i < n; i += 6) order.push(i);
+    for (let i = 0; i < n; i += STRIDE) order.push(i);
     if (order[order.length - 1] !== n - 1) order.push(n - 1);
     const coarseCount = order.length;
-    for (let i = 0; i < n; i += 3) if (i % 6 && i !== n - 1) order.push(i);
+    for (let i = 0; i < n; i += 3) if (i % STRIDE && i !== n - 1) order.push(i);
     for (let i = 0; i < n; i++) if (i % 3 && i !== n - 1) order.push(i);
 
     let k = 0, done = 0;
     const worker = async () => {
       while (k < order.length) {
+        if (k >= coarseCount && opts.gate) await opts.gate; // refine pass waits its turn (e.g. hero first)
         const i = order[k++];
         const im = new Image();
         im.decoding = "async";
